@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generador de QR ilimitado</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{--bg:#eef2ee;--panel:#fff;--ink:#1c2b24;--mute:#5d6f66;--line:#cfd9d2;--acc:#1f6b4f;--acc-ink:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#121a16;--panel:#1a2420;--ink:#e6efe9;--mute:#9bb0a5;--line:#2c3b34;--acc:#4fbf92;--acc-ink:#0c1511}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Trebuchet MS",system-ui,sans-serif;padding:20px}
+main{max-width:920px;margin:0 auto;display:grid;gap:20px;grid-template-columns:1fr 340px;align-items:start}
+@media(max-width:760px){main{grid-template-columns:1fr}}
+h1{grid-column:1/-1;margin:0;font:700 clamp(26px,5vw,38px)/1.1 Georgia,serif}
+p.sub{grid-column:1/-1;margin:-12px 0 0;color:var(--mute)}
+section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+label{display:block;font-weight:600;margin:14px 0 6px}
+label:first-child{margin-top:0}
+textarea,input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+textarea{min-height:96px;resize:vertical}
+input[type=color]{padding:2px;height:42px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+button{font:inherit;font-weight:600;padding:10px 14px;border-radius:8px;border:1px solid var(--acc);background:var(--acc);color:var(--acc-ink);cursor:pointer}
+button.alt{background:transparent;color:var(--acc)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+#out{display:flex;justify-content:center;padding:14px;background:#fff;border-radius:10px;min-height:120px}
+#out img,#out canvas{max-width:100%;height:auto}
+.hint{color:var(--mute);font-size:14px;margin:10px 0 0}
+#hist{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px;margin-top:12px}
+#hist button{padding:6px;background:#fff;border-color:var(--line);color:#000;font-weight:400;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#hist img{width:100%;display:block}
+</style>
+</head>
+<body>
+<main>
+<h1>Generador de QR ilimitado</h1>
+<p class="sub">Sin registro, sin límite. Todo se genera en tu navegador.</p>
+
+<section>
+  <label for="tipo">Tipo de contenido</label>
+  <select id="tipo">
+    <option value="texto">Texto o enlace</option>
+    <option value="wifi">Red WiFi</option>
+    <option value="wa">WhatsApp</option>
+    <option value="mail">Correo</option>
+  </select>
+
+  <div id="f-texto"><label for="txt">Texto o URL</label><textarea id="txt" placeholder="https://ejemplo.com"></textarea></div>
+  <div id="f-wifi" hidden>
+    <label for="ssid">Nombre de la red</label><input id="ssid">
+    <div class="row"><div><label for="pass">Contraseña</label><input id="pass"></div>
+    <div><label for="sec">Seguridad</label><select id="sec"><option>WPA</option><option>WEP</option><option value="nopass">Ninguna</option></select></div></div>
+  </div>
+  <div id="f-wa" hidden>
+    <label for="tel">Número con código de país</label><input id="tel" placeholder="51999999999">
+    <label for="msg">Mensaje (opcional)</label><input id="msg">
+  </div>
+  <div id="f-mail" hidden>
+    <label for="to">Para</label><input id="to" type="email">
+    <label for="asu">Asunto</label><input id="asu">
+  </div>
+
+  <div class="row">
+    <div><label for="size">Tamaño (px)</label><input id="size" type="number" min="128" max="1024" step="32" value="320"></div>
+    <div><label for="lvl">Corrección de error</label><select id="lvl"><option value="L">Baja</option><option value="M">Media</option><option value="Q">Alta</option><option value="H" selected>Máxima</option></select></div>
+  </div>
+  <div class="row">
+    <div><label for="fg">Color del código</label><input id="fg" type="color" value="#000000"></div>
+    <div><label for="bg">Color de fondo</label><input id="bg" type="color" value="#ffffff"></div>
+  </div>
+  <p class="hint">Usa colores con buen contraste: el código oscuro sobre fondo claro se escanea mejor.</p>
+</section>
+
+<section>
+  <div id="out" aria-live="polite"></div>
+  <p id="err" class="hint" role="alert"></p>
+  <div class="btns">
+    <button id="dl">Descargar PNG</button>
+    <button id="cp" class="alt">Copiar imagen</button>
+    <button id="clr" class="alt">Limpiar</button>
+  </div>
+  <p class="hint">Recientes (toca uno para recuperarlo):</p>
+  <div id="hist"></div>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const ids=['tipo','txt','ssid','pass','sec','tel','msg','to','asu','size','lvl','fg','bg'];
+let hist=[];
+
+function contenido(){
+  const t=$('tipo').value;
+  if(t==='wifi'){
+    const e=s=>s.replace(/([\\;,:"])/g,'\\$1');
+    if(!$('ssid').value) return '';
+    return `WIFI:T:${$('sec').value};S:${e($('ssid').value)};P:${e($('pass').value)};;`;
+  }
+  if(t==='wa'){
+    const n=$('tel').value.replace(/\D/g,''); if(!n) return '';
+    return `https://wa.me/${n}`+($('msg').value?`?text=${encodeURIComponent($('msg').value)}`:'');
+  }
+  if(t==='mail'){
+    if(!$('to').value) return '';
+    return `mailto:${$('to').value}`+($('asu').value?`?subject=${encodeURIComponent($('asu').value)}`:'');
+  }
+  return $('txt').value.trim();
+}
+
+function dibujar(){
+  const tipo=$('tipo').value;
+  ['texto','wifi','wa','mail'].forEach(k=>$('f-'+k).hidden=(k!==tipo));
+  const data=contenido(), out=$('out');
+  out.innerHTML=''; $('err').textContent='';
+  if(!data){$('err').textContent='Escribe algo para generar el código.';return;}
+  const size=Math.min(1024,Math.max(128,parseInt($('size').value)||320));
+  try{
+    new QRCode(out,{text:data,width:size,height:size,colorDark:$('fg').value,colorLight:$('bg').value,correctLevel:QRCode.CorrectLevel[$('lvl').value]});
+  }catch(e){
+    $('err').textContent='El contenido es demasiado largo. Redúcelo o baja la corrección de error.';
+  }
+}
+
+function canvas(){return $('out').querySelector('canvas');}
+
+$('dl').onclick=()=>{
+  const c=canvas(); if(!c){return;}
+  const a=document.createElement('a');
+  a.href=c.toDataURL('image/png'); a.download='qr-'+Date.now()+'.png'; a.click();
+  guardar(c.toDataURL('image/png'));
+};
+$('cp').onclick=async()=>{
+  const c=canvas(); if(!c)return;
+  try{
+    const b=await new Promise(r=>c.toBlob(r));
+    await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);
+    $('err').textContent='Imagen copiada.';
+  }catch(e){$('err').textContent='Tu navegador no permite copiar la imagen. Usa Descargar PNG.';}
+};
+$('clr').onclick=()=>{ids.forEach(i=>{if($(i).tagName!=='SELECT'&&$(i).type!=='color'&&$(i).type!=='number')$(i).value='';});dibujar();};
+
+function guardar(url){
+  hist.unshift({url,txt:contenido(),tipo:$('tipo').value});
+  hist=hist.slice(0,12);
+  $('hist').innerHTML='';
+  hist.forEach(h=>{
+    const b=document.createElement('button');
+    b.innerHTML=`<img alt="QR guardado" src="${h.url}"><span>${h.txt.replace(/</g,'&lt;').slice(0,24)}</span>`;
+    b.onclick=()=>{$('tipo').value='texto';$('txt').value=h.txt;dibujar();};
+    $('hist').appendChild(b);
+  });
+}
+
+ids.forEach(i=>$(i).addEventListener('input',dibujar));
+$('tipo').addEventListener('change',dibujar);
+dibujar();
+</script>
+</body>
+</html>
