@@ -428,6 +428,21 @@
       
       <h3>Generación Masiva (CSV)</h3>
       <p class="hint" style="margin-top:0; margin-bottom:12px;">Sube un archivo CSV con una lista de URLs o textos. Se generará un archivo .ZIP con todos los QR institucionales.</p>
+
+      <!-- EJEMPLO DE CSV -->
+      <div style="background:var(--paper); border:1px solid var(--line); border-radius:2px; padding:12px 14px; margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:10px; flex-wrap:wrap;">
+          <strong style="font-size:0.8rem; color:var(--ink-soft); letter-spacing:0.01em;">Ejemplo de formato CSV</strong>
+          <button id="dl-csv-ejemplo" class="alt" style="padding:6px 10px; font-size:0.74rem;">Descargar plantilla</button>
+        </div>
+        <p class="hint" style="margin:0 0 8px; font-size:0.78rem;">Una fila por código. Solo la primera columna contiene el texto o URL (puede ir entre comillas si tiene comas).</p>
+        <pre style="margin:0; padding:10px; background:#fff; border:1px solid var(--line-soft); font-family:'IBM Plex Mono', monospace; font-size:0.74rem; line-height:1.5; color:var(--ink); overflow-x:auto;">https://www.uandina.edu.pe/tramites
+https://www.uandina.edu.pe/grados
+"https://www.uandina.edu.pe/contacto?area=grados"
+Texto simple sin enlace
+WIFI:T:WPA;S:UAC-WiFi;P:clave123;;</pre>
+      </div>
+
       <input type="file" id="csv-file" accept=".csv" style="padding:8px; background:#fff; border:1px solid var(--line); cursor:pointer;">
       <div class="btns" style="margin-top:12px;">
         <button id="dl-zip" disabled>Generar ZIP Masivo</button>
