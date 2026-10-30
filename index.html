@@ -2,160 +2,632 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Generador de QR ilimitado</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador de QR institucional — UAC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-:root{--bg:#eef2ee;--panel:#fff;--ink:#1c2b24;--mute:#5d6f66;--line:#cfd9d2;--acc:#1f6b4f;--acc-ink:#fff}
-@media (prefers-color-scheme:dark){:root{--bg:#121a16;--panel:#1a2420;--ink:#e6efe9;--mute:#9bb0a5;--line:#2c3b34;--acc:#4fbf92;--acc-ink:#0c1511}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Trebuchet MS",system-ui,sans-serif;padding:20px}
-main{max-width:920px;margin:0 auto;display:grid;gap:20px;grid-template-columns:1fr 340px;align-items:start}
-@media(max-width:760px){main{grid-template-columns:1fr}}
-h1{grid-column:1/-1;margin:0;font:700 clamp(26px,5vw,38px)/1.1 Georgia,serif}
-p.sub{grid-column:1/-1;margin:-12px 0 0;color:var(--mute)}
-section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
-label{display:block;font-weight:600;margin:14px 0 6px}
-label:first-child{margin-top:0}
-textarea,input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
-textarea{min-height:96px;resize:vertical}
-input[type=color]{padding:2px;height:42px}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-button{font:inherit;font-weight:600;padding:10px 14px;border-radius:8px;border:1px solid var(--acc);background:var(--acc);color:var(--acc-ink);cursor:pointer}
-button.alt{background:transparent;color:var(--acc)}
-button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
-.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
-#out{display:flex;justify-content:center;padding:14px;background:#fff;border-radius:10px;min-height:120px}
-#out img,#out canvas{max-width:100%;height:auto}
-.hint{color:var(--mute);font-size:14px;margin:10px 0 0}
-#hist{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px;margin-top:12px}
-#hist button{padding:6px;background:#fff;border-color:var(--line);color:#000;font-weight:400;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#hist img{width:100%;display:block}
+  :root{
+    --paper:#EEF3F8;
+    --paper-card:#FFFFFF;
+    --ink:#0F2C49;
+    --ink-soft:#57708A;
+    --line:#CBDAE7;
+    --line-soft:#DEE9F2;
+    --azul:#194D84;
+    --azul-oscuro:#0B2740;
+    --celeste:#00AEEF;
+    --c-titulo:#194D84;
+    --c-bachillerato:#00AEEF;
+    --c-maestria:#0B2740;
+    --c-doctorado:#3D6690;
+    --c-segunda:#0E8C9E;
+    --c-certificacion:#5D7A99;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--celeste); color:#fff;}
+
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:0 28px 80px;
+  }
+
+  /* ---------- HEADER ---------- */
+  header.masthead{
+    background:var(--azul-oscuro);
+    border-bottom:3px solid var(--celeste);
+    margin:0 0 36px;
+    padding:0;
+  }
+  header.masthead .wrap{
+    padding-top:34px;
+    padding-bottom:24px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:24px;
+    flex-wrap:wrap;
+  }
+  .masthead-left h1{
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    font-size:2.05rem;
+    line-height:1.18;
+    margin:0 0 8px;
+    max-width:640px;
+    letter-spacing:-0.01em;
+    color:#FFFFFF;
+  }
+  .masthead-left p{
+    margin:0;
+    color:#AFC6DA;
+    font-size:0.98rem;
+    max-width:560px;
+  }
+  .masthead-right{
+    text-align:right;
+    font-size:0.85rem;
+    color:#AFC6DA;
+    white-space:nowrap;
+  }
+  .masthead-right .org{
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    color:var(--celeste);
+    font-size:1rem;
+    margin-bottom:2px;
+  }
+
+  /* ---------- SECTION LABEL ---------- */
+  .section-label{
+    font-family:'Source Serif 4', serif;
+    font-size:1.25rem;
+    font-weight:600;
+    margin:0 0 16px;
+    padding-top:8px;
+    border-top:1px solid var(--line);
+  }
+
+  /* ---------- LAYOUT PRINCIPAL ---------- */
+  .main-grid{
+    display:grid;
+    grid-template-columns:1.15fr 1fr;
+    gap:24px;
+    align-items:start;
+    margin-bottom:24px;
+  }
+  @media (max-width: 860px){
+    .wrap{padding:0 18px 60px;}
+    .masthead-left h1{font-size:1.6rem;}
+    .main-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width: 520px){
+    header.masthead .wrap{flex-direction:column; align-items:flex-start; gap:10px;}
+    .masthead-right{text-align:left; white-space:normal;}
+    .masthead-left h1{font-size:1.35rem;}
+  }
+
+  /* ---------- PANELS ---------- */
+  .panel{
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    padding:20px 22px 22px;
+    margin-bottom:24px;
+  }
+  .panel h3{
+    font-size:0.78rem;
+    letter-spacing:0.01em;
+    color:var(--ink-soft);
+    margin:0 0 14px;
+    font-weight:600;
+    border-bottom:1px solid var(--line-soft);
+    padding-bottom:10px;
+  }
+
+  /* ---------- FORM ---------- */
+  label{
+    display:block;
+    font-weight:600;
+    font-size:0.82rem;
+    color:var(--ink-soft);
+    margin:14px 0 6px;
+    letter-spacing:0.01em;
+  }
+  label:first-of-type{margin-top:0;}
+  textarea,input,select{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:0.92rem;
+    border-radius:2px;
+    transition:border-color .12s ease, box-shadow .12s ease;
+  }
+  textarea{min-height:92px;resize:vertical;}
+  textarea:focus,input:focus,select:focus{
+    outline:none;
+    border-color:var(--celeste);
+    box-shadow:0 0 0 2px rgba(0,174,239,0.18);
+  }
+  input[type=color]{
+    padding:2px;
+    height:42px;
+    cursor:pointer;
+    background:var(--paper-card);
+  }
+  .row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .hint{
+    color:var(--ink-soft);
+    font-size:0.82rem;
+    margin:10px 0 0;
+  }
+
+  /* ---------- BOTONES ---------- */
+  .btns{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:18px;
+  }
+  button{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:0.88rem;
+    font-weight:600;
+    padding:10px 16px;
+    border-radius:2px;
+    border:1px solid var(--azul);
+    background:var(--azul);
+    color:#fff;
+    cursor:pointer;
+    transition:background .12s ease, box-shadow .12s ease, transform .1s ease;
+  }
+  button:hover{
+    background:var(--azul-oscuro);
+    box-shadow:0 4px 14px rgba(34,48,58,0.14);
+  }
+  button:active{transform:translateY(1px);}
+  button.alt{
+    background:transparent;
+    color:var(--azul);
+  }
+  button.alt:hover{
+    background:var(--line-soft);
+  }
+  button:focus-visible{
+    outline:2px solid var(--celeste);
+    outline-offset:2px;
+  }
+
+  /* ---------- SALIDA QR ---------- */
+  #out{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+    background:#fff;
+    border:1px solid var(--line-soft);
+    border-radius:2px;
+    min-height:160px;
+  }
+  #out img,#out canvas{
+    max-width:100%;
+    height:auto;
+    display:block;
+  }
+  #err{
+    color:var(--c-segunda);
+    font-size:0.84rem;
+    margin:10px 0 0;
+    min-height:1.2em;
+  }
+
+  /* ---------- HISTORIAL ---------- */
+  #hist{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(92px,1fr));
+    gap:10px;
+    margin-top:12px;
+  }
+  #hist button{
+    padding:6px;
+    background:#fff;
+    border:1px solid var(--line);
+    color:var(--ink);
+    font-weight:500;
+    font-size:0.68rem;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    line-height:1.3;
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+  }
+  #hist button:hover{
+    border-color:var(--celeste);
+    background:var(--paper);
+    box-shadow:none;
+  }
+  #hist img{
+    width:100%;
+    display:block;
+    border:1px solid var(--line-soft);
+  }
+  #hist span{
+    display:block;
+    width:100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    margin-top:50px;
+    padding-top:18px;
+    border-top:1px solid var(--line);
+    color:var(--ink-soft);
+    font-size:0.8rem;
+  }
 </style>
 </head>
 <body>
-<main>
-<h1>Generador de QR ilimitado</h1>
-<p class="sub">Sin registro, sin límite. Todo se genera en tu navegador.</p>
+<header class="masthead">
+  <div class="wrap">
+    <div class="masthead-left">
+      <h1>Generador de QR institucional</h1>
+      <p>Códigos QR ilimitados con el sello de la Universidad Andina del Cusco. Sin registro, todo se genera en tu navegador.</p>
+    </div>
+    <div class="masthead-right">
+      <div class="org">Universidad Andina del Cusco</div>
+      <div>Oficina de Grados y Títulos</div>
+    </div>
+  </div>
+</header>
 
-<section>
-  <label for="tipo">Tipo de contenido</label>
-  <select id="tipo">
-    <option value="texto">Texto o enlace</option>
-    <option value="wifi">Red WiFi</option>
-    <option value="wa">WhatsApp</option>
-    <option value="mail">Correo</option>
-  </select>
+<div class="wrap">
+  <div class="main-grid">
 
-  <div id="f-texto"><label for="txt">Texto o URL</label><textarea id="txt" placeholder="https://ejemplo.com"></textarea></div>
-  <div id="f-wifi" hidden>
-    <label for="ssid">Nombre de la red</label><input id="ssid">
-    <div class="row"><div><label for="pass">Contraseña</label><input id="pass"></div>
-    <div><label for="sec">Seguridad</label><select id="sec"><option>WPA</option><option>WEP</option><option value="nopass">Ninguna</option></select></div></div>
-  </div>
-  <div id="f-wa" hidden>
-    <label for="tel">Número con código de país</label><input id="tel" placeholder="51999999999">
-    <label for="msg">Mensaje (opcional)</label><input id="msg">
-  </div>
-  <div id="f-mail" hidden>
-    <label for="to">Para</label><input id="to" type="email">
-    <label for="asu">Asunto</label><input id="asu">
+    <!-- Columna izquierda: formulario -->
+    <section class="panel" style="margin-bottom:0;">
+      <h3>Contenido del código</h3>
+
+      <label for="tipo">Tipo de contenido</label>
+      <select id="tipo">
+        <option value="texto">Texto o enlace</option>
+        <option value="wifi">Red WiFi</option>
+        <option value="wa">WhatsApp</option>
+        <option value="mail">Correo</option>
+      </select>
+
+      <div id="f-texto">
+        <label for="txt">Texto o URL</label>
+        <textarea id="txt" placeholder="https://ejemplo.com"></textarea>
+      </div>
+      <div id="f-wifi" hidden>
+        <label for="ssid">Nombre de la red</label>
+        <input id="ssid">
+        <div class="row">
+          <div><label for="pass">Contraseña</label><input id="pass"></div>
+          <div>
+            <label for="sec">Seguridad</label>
+            <select id="sec">
+              <option>WPA</option>
+              <option>WEP</option>
+              <option value="nopass">Ninguna</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="f-wa" hidden>
+        <label for="tel">Número con código de país</label>
+        <input id="tel" placeholder="51999999999">
+        <label for="msg">Mensaje (opcional)</label>
+        <input id="msg">
+      </div>
+      <div id="f-mail" hidden>
+        <label for="to">Para</label>
+        <input id="to" type="email">
+        <label for="asu">Asunto</label>
+        <input id="asu">
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="size">Tamaño (px)</label>
+          <input id="size" type="number" min="200" max="1024" step="32" value="400">
+        </div>
+        <div>
+          <label for="lvl">Corrección de error</label>
+          <select id="lvl">
+            <option value="L">Baja</option>
+            <option value="M">Media</option>
+            <option value="Q">Alta</option>
+            <option value="H" selected>Máxima</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="fg">Color del código</label>
+          <input id="fg" type="color" value="#0B2740">
+        </div>
+        <div>
+          <label for="bg">Color de fondo</label>
+          <input id="bg" type="color" value="#ffffff">
+        </div>
+      </div>
+      <p class="hint">Usa colores con buen contraste: el código oscuro sobre fondo claro se escanea mejor. La corrección máxima (H) es la recomendada para QR institucionales.</p>
+    </section>
+
+    <!-- Columna derecha: vista previa -->
+    <section class="panel" style="margin-bottom:0;">
+      <h3>Vista previa</h3>
+      <div id="out" aria-live="polite"></div>
+      <p id="err" role="alert"></p>
+      <div class="btns">
+        <button id="dl">Descargar PNG</button>
+        <button id="cp" class="alt">Copiar imagen</button>
+        <button id="clr" class="alt">Limpiar</button>
+      </div>
+      <p class="hint" style="margin-top:18px;">Recientes (toca uno para recuperarlo):</p>
+      <div id="hist"></div>
+    </section>
+
   </div>
 
-  <div class="row">
-    <div><label for="size">Tamaño (px)</label><input id="size" type="number" min="128" max="1024" step="32" value="320"></div>
-    <div><label for="lvl">Corrección de error</label><select id="lvl"><option value="L">Baja</option><option value="M">Media</option><option value="Q">Alta</option><option value="H" selected>Máxima</option></select></div>
-  </div>
-  <div class="row">
-    <div><label for="fg">Color del código</label><input id="fg" type="color" value="#000000"></div>
-    <div><label for="bg">Color de fondo</label><input id="bg" type="color" value="#ffffff"></div>
-  </div>
-  <p class="hint">Usa colores con buen contraste: el código oscuro sobre fondo claro se escanea mejor.</p>
-</section>
-
-<section>
-  <div id="out" aria-live="polite"></div>
-  <p id="err" class="hint" role="alert"></p>
-  <div class="btns">
-    <button id="dl">Descargar PNG</button>
-    <button id="cp" class="alt">Copiar imagen</button>
-    <button id="clr" class="alt">Limpiar</button>
-  </div>
-  <p class="hint">Recientes (toca uno para recuperarlo):</p>
-  <div id="hist"></div>
-</section>
-</main>
+  <footer>
+    Los códigos QR generados incluyen el logotipo institucional de la Universidad Andina del Cusco y están destinados exclusivamente a uso oficial.
+    <div style="margin-top:8px;">&copy; 2026 Todos los derechos reservados &middot; Ing. Olger Waldir Peña Palomino</div>
+  </footer>
+</div>
 
 <script>
-const $=id=>document.getElementById(id);
-const ids=['tipo','txt','ssid','pass','sec','tel','msg','to','asu','size','lvl','fg','bg'];
-let hist=[];
+/* ============================================================
+   LOGO UAC (embebido como SVG → data URI para no depender de archivos)
+   ============================================================ */
+const LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#194D84" d="M256 40c-12 0-22 9-26 20l-8 26-28-12c-11-5-24-1-30 9l-14 24-30-4c-12-2-23 6-26 17l-6 28-30 4c-12 2-21 12-21 24l2 29-28 14c-11 6-16 19-11 30l13 26-24 18c-9 8-11 21-5 31l20 22-17 24c-7 10-4 23 5 30l25 16-7 28c-3 11 4 23 15 27l28 8 3 29c1 12 11 21 23 22l29 1 12 26c5 11 18 16 29 12l26-10 20 21c8 9 21 10 31 5l24-18 26 14c10 6 23 2 31-7l17-24 29 5c11 2 23-5 27-16l9-27 28-3c12-1 21-10 22-22l1-29 25-13c11-6 15-19 10-30l-11-27 20-21c8-9 8-22 2-31l-19-22 12-27c5-11 0-24-10-30l-26-13 2-29c1-12-8-22-19-25l-28-6-5-29c-2-12-13-19-25-19l-29 2-15-25c-6-11-19-14-29-9l-25 13-22-20c-8-8-21-8-30-1l-22 19-27-9c-11-4-24 0-30 10l-13 25-29 1c-12 0-22 9-23 21l-1 29-26 11c-11 5-15 18-10 29l11 27-21 20c-9 8-9 21-3 31l18 23-13 27c-5 11 0 24 11 29l26 13-2 29c-1 12 7 22 19 25l28 6 5 29c2 12 13 19 25 19l29-2 15 25c6 10 19 14 29 9l25-13 22 20c8 8 21 8 30 1l22-19 27 9c11 4 24 0 30-10l13-25 29-1c12 0 22-9 23-21l1-29 26-11c11-5 15-18 10-29l-11-27 21-20c9-8 9-21 3-31l-18-23 13-27c5-11 0-24-11-29l-26-13 2-29c1-12-7-22-19-25l-28-6-5-29c-2-12-13-19-25-19l-29 2-15-25c-6-10-19-14-29-9l-25 13-22-20c-8-8-21-8-30-1l-22 19-27-9c-11-4-24 0-30 10l-13 25-29 1c-12 0-22 9-23 21l-1 29-26 11c-11 5-15 18-10 29l11 27-21 20c-9 8-9 21-3 31l18 23-13 27c-5 11 0 24 11 29l26 13-2 29c-1 12 7 22 19 25l28 6 5 29c2 12 13 19 25 19z"/><path fill="#FFFFFF" d="M256 128c-71 0-128 57-128 128s57 128 128 128 128-57 128-128-57-128-128-128zm0 216c-49 0-88-39-88-88s39-88 88-88 88 39 88 88-39 88-88 88z"/><path fill="#194D84" d="M256 192c-35 0-64 29-64 64s29 64 64 64 64-29 64-64-29-64-64-64zm0 96c-18 0-32-14-32-32s14-32 32-32 32 14 32 32-14 32-32 32z"/></svg>`;
+
+const LOGO_URI = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(LOGO_SVG);
+
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const ids = ['tipo','txt','ssid','pass','sec','tel','msg','to','asu','size','lvl','fg','bg'];
+let hist = [];
 
 function contenido(){
-  const t=$('tipo').value;
-  if(t==='wifi'){
-    const e=s=>s.replace(/([\\;,:"])/g,'\\$1');
-    if(!$('ssid').value) return '';
+  const t = $('tipo').value;
+  if (t === 'wifi'){
+    const e = s => s.replace(/([\\;,:"])/g, '\\$1');
+    if (!$('ssid').value) return '';
     return `WIFI:T:${$('sec').value};S:${e($('ssid').value)};P:${e($('pass').value)};;`;
   }
-  if(t==='wa'){
-    const n=$('tel').value.replace(/\D/g,''); if(!n) return '';
-    return `https://wa.me/${n}`+($('msg').value?`?text=${encodeURIComponent($('msg').value)}`:'');
+  if (t === 'wa'){
+    const n = $('tel').value.replace(/\D/g, '');
+    if (!n) return '';
+    return `https://wa.me/${n}` + ($('msg').value ? `?text=${encodeURIComponent($('msg').value)}` : '');
   }
-  if(t==='mail'){
-    if(!$('to').value) return '';
-    return `mailto:${$('to').value}`+($('asu').value?`?subject=${encodeURIComponent($('asu').value)}`:'');
+  if (t === 'mail'){
+    if (!$('to').value) return '';
+    return `mailto:${$('to').value}` + ($('asu').value ? `?subject=${encodeURIComponent($('asu').value)}` : '');
   }
   return $('txt').value.trim();
 }
 
+/* ============================================================
+   RENDER DEL QR CON LOGO INSTITUCIONAL
+   ============================================================ */
 function dibujar(){
-  const tipo=$('tipo').value;
-  ['texto','wifi','wa','mail'].forEach(k=>$('f-'+k).hidden=(k!==tipo));
-  const data=contenido(), out=$('out');
-  out.innerHTML=''; $('err').textContent='';
-  if(!data){$('err').textContent='Escribe algo para generar el código.';return;}
-  const size=Math.min(1024,Math.max(128,parseInt($('size').value)||320));
-  try{
-    new QRCode(out,{text:data,width:size,height:size,colorDark:$('fg').value,colorLight:$('bg').value,correctLevel:QRCode.CorrectLevel[$('lvl').value]});
-  }catch(e){
-    $('err').textContent='El contenido es demasiado largo. Redúcelo o baja la corrección de error.';
+  const tipo = $('tipo').value;
+  ['texto','wifi','wa','mail'].forEach(k => {
+    $('f-' + k).hidden = (k !== tipo);
+  });
+
+  const data = contenido();
+  const out = $('out');
+  out.innerHTML = '';
+  $('err').textContent = '';
+
+  if (!data){
+    $('err').textContent = 'Escribe algo para generar el código.';
+    return;
+  }
+
+  const size = Math.min(1024, Math.max(200, parseInt($('size').value) || 400));
+  const fg = $('fg').value;
+  const bg = $('bg').value;
+
+  // Contenedor temporal para el QR base
+  const tmp = document.createElement('div');
+  try {
+    new QRCode(tmp, {
+      text: data,
+      width: size,
+      height: size,
+      colorDark: fg,
+      colorLight: bg,
+      correctLevel: QRCode.CorrectLevel[$('lvl').value]
+    });
+  } catch (e){
+    $('err').textContent = 'El contenido es demasiado largo. Redúcelo o baja la corrección de error.';
+    return;
+  }
+
+  // QRCode.js genera <canvas> y/o <img>; esperamos un canvas o imagen
+  const baseCanvas = tmp.querySelector('canvas');
+  const baseImg = tmp.querySelector('img');
+
+  const finalCanvas = document.createElement('canvas');
+  finalCanvas.width = size;
+  finalCanvas.height = size;
+  const ctx = finalCanvas.getContext('2d');
+
+  function pintarLogo(){
+    // Fondo
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, size, size);
+
+    // QR
+    if (baseCanvas){
+      ctx.drawImage(baseCanvas, 0, 0, size, size);
+    } else if (baseImg){
+      ctx.drawImage(baseImg, 0, 0, size, size);
+    }
+
+    // --- Logo institucional en el centro ---
+    // El módulo del QR se calcula aproximadamente por el número de celdas
+    // Usamos un cuadrado blanco de fondo para legibilidad del logo.
+    const logoRatio = 0.22;                    // 22% del tamaño total
+    const logoSize = Math.round(size * logoRatio);
+    const logoPos = Math.round((size - logoSize) / 2);
+
+    // Fondo blanco redondeado detrás del logo
+    const pad = Math.round(logoSize * 0.14);
+    const boxSize = logoSize + pad * 2;
+    const boxPos = Math.round((size - boxSize) / 2);
+    const r = Math.round(boxSize * 0.18);
+
+    ctx.save();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.moveTo(boxPos + r, boxPos);
+    ctx.lineTo(boxPos + boxSize - r, boxPos);
+    ctx.quadraticCurveTo(boxPos + boxSize, boxPos, boxPos + boxSize, boxPos + r);
+    ctx.lineTo(boxPos + boxSize, boxPos + boxSize - r);
+    ctx.quadraticCurveTo(boxPos + boxSize, boxPos + boxSize, boxPos + boxSize - r, boxPos + boxSize);
+    ctx.lineTo(boxPos + r, boxPos + boxSize);
+    ctx.quadraticCurveTo(boxPos, boxPos + boxSize, boxPos, boxPos + boxSize - r);
+    ctx.lineTo(boxPos, boxPos + r);
+    ctx.quadraticCurveTo(boxPos, boxPos, boxPos + r, boxPos);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // Dibujar el logo (SVG)
+    const logoImg = new Image();
+    logoImg.onload = () => {
+      ctx.drawImage(logoImg, logoPos, logoPos, logoSize, logoSize);
+      // Reemplazar el contenedor con el canvas final
+      out.innerHTML = '';
+      out.appendChild(finalCanvas);
+    };
+    logoImg.onerror = () => {
+      // Si falla el logo, mostramos al menos el QR base
+      out.innerHTML = '';
+      out.appendChild(finalCanvas);
+    };
+    logoImg.src = LOGO_URI;
+  }
+
+  // Esperar a que el QR base esté disponible (canvas o img)
+  if (baseCanvas){
+    pintarLogo();
+  } else if (baseImg){
+    if (baseImg.complete) pintarLogo();
+    else baseImg.onload = pintarLogo;
+  } else {
+    // Fallback: esperar un tick por si acaso
+    setTimeout(() => {
+      const c = tmp.querySelector('canvas');
+      const i = tmp.querySelector('img');
+      if (c || i) dibujar();
+      else $('err').textContent = 'No se pudo generar el código. Intenta de nuevo.';
+    }, 50);
   }
 }
 
-function canvas(){return $('out').querySelector('canvas');}
+/* ============================================================
+   DESCARGA / COPIA / LIMPIEZA
+   ============================================================ */
+function canvas(){
+  return $('out').querySelector('canvas');
+}
 
-$('dl').onclick=()=>{
-  const c=canvas(); if(!c){return;}
-  const a=document.createElement('a');
-  a.href=c.toDataURL('image/png'); a.download='qr-'+Date.now()+'.png'; a.click();
+$('dl').onclick = () => {
+  const c = canvas();
+  if (!c) return;
+  const a = document.createElement('a');
+  a.href = c.toDataURL('image/png');
+  a.download = 'qr-uac-' + Date.now() + '.png';
+  a.click();
   guardar(c.toDataURL('image/png'));
 };
-$('cp').onclick=async()=>{
-  const c=canvas(); if(!c)return;
-  try{
-    const b=await new Promise(r=>c.toBlob(r));
-    await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);
-    $('err').textContent='Imagen copiada.';
-  }catch(e){$('err').textContent='Tu navegador no permite copiar la imagen. Usa Descargar PNG.';}
-};
-$('clr').onclick=()=>{ids.forEach(i=>{if($(i).tagName!=='SELECT'&&$(i).type!=='color'&&$(i).type!=='number')$(i).value='';});dibujar();};
 
+$('cp').onclick = async () => {
+  const c = canvas();
+  if (!c) return;
+  try{
+    const b = await new Promise(r => c.toBlob(r, 'image/png'));
+    await navigator.clipboard.write([new ClipboardItem({'image/png': b})]);
+    $('err').textContent = 'Imagen copiada al portapapeles.';
+  } catch (e){
+    $('err').textContent = 'Tu navegador no permite copiar la imagen. Usa Descargar PNG.';
+  }
+};
+
+$('clr').onclick = () => {
+  ids.forEach(i => {
+    const el = $(i);
+    if (el.tagName !== 'SELECT' && el.type !== 'color' && el.type !== 'number') el.value = '';
+  });
+  dibujar();
+};
+
+/* ============================================================
+   HISTORIAL
+   ============================================================ */
 function guardar(url){
-  hist.unshift({url,txt:contenido(),tipo:$('tipo').value});
-  hist=hist.slice(0,12);
-  $('hist').innerHTML='';
-  hist.forEach(h=>{
-    const b=document.createElement('button');
-    b.innerHTML=`<img alt="QR guardado" src="${h.url}"><span>${h.txt.replace(/</g,'&lt;').slice(0,24)}</span>`;
-    b.onclick=()=>{$('tipo').value='texto';$('txt').value=h.txt;dibujar();};
-    $('hist').appendChild(b);
+  hist.unshift({url, txt: contenido(), tipo: $('tipo').value});
+  hist = hist.slice(0, 12);
+  const box = $('hist');
+  box.innerHTML = '';
+  hist.forEach(h => {
+    const b = document.createElement('button');
+    const safe = (h.txt || '').replace(/</g, '&lt;').slice(0, 24);
+    b.innerHTML = `<img alt="QR guardado" src="${h.url}"><span>${safe}</span>`;
+    b.onclick = () => {
+      $('tipo').value = 'texto';
+      $('txt').value = h.txt;
+      dibujar();
+    };
+    box.appendChild(b);
   });
 }
 
-ids.forEach(i=>$(i).addEventListener('input',dibujar));
-$('tipo').addEventListener('change',dibujar);
-dibujar();
+/* ============================================================
+   EVENTOS E INICIALIZACIÓN
+   ============================================================ */
+ids.forEach(i => $(i).addEventListener('input', dibujar));
+$('tipo').addEventListener('change', dibujar);
+
+// Al cargar, si no hay contenido, mostramos un ejemplo institucional
+window.addEventListener('DOMContentLoaded', () => {
+  if (!$('txt').value && $('tipo').value === 'texto'){
+    $('txt').value = 'Universidad Andina del Cusco — Oficina de Grados y Títulos';
+  }
+  dibujar();
+});
 </script>
 </body>
 </html>
