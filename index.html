@@ -6,7 +6,9 @@
 <title>Generador de QR institucional — UAC</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Librerías necesarias -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{
     --paper:#EEF3F8;
@@ -168,6 +170,10 @@
     font-size:0.82rem;
     margin:10px 0 0;
   }
+  .divider{
+    border-top:1px dashed var(--line);
+    margin:18px 0;
+  }
 
   /* ---------- BOTONES ---------- */
   .btns{
@@ -187,6 +193,10 @@
     color:#fff;
     cursor:pointer;
     transition:background .12s ease, box-shadow .12s ease, transform .1s ease;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
   }
   button:hover{
     background:var(--azul-oscuro);
@@ -200,6 +210,12 @@
   button.alt:hover{
     background:var(--line-soft);
   }
+  button:disabled{
+    opacity:0.5;
+    cursor:not-allowed;
+    transform:none;
+    box-shadow:none;
+  }
 
   /* ---------- SALIDA QR ---------- */
   #out{
@@ -212,7 +228,7 @@
     border-radius:2px;
     min-height:160px;
   }
-  #out img,#out canvas{
+  #out img,#out canvas,#out svg{
     max-width:100%;
     height:auto;
     display:block;
@@ -281,7 +297,7 @@
   <div class="wrap">
     <div class="masthead-left">
       <h1>Generador de QR institucional</h1>
-      <p>Códigos QR ilimitados con el sello de la Universidad Andina del Cusco. Sin registro, todo se genera en tu navegador.</p>
+      <p>Códigos QR ilimitados con el sello de la Universidad Andina del Cusco. Sin registro, sin servidores, todo se genera en tu navegador.</p>
     </div>
     <div class="masthead-right">
       <div class="org">Universidad Andina del Cusco</div>
@@ -295,7 +311,7 @@
 
     <!-- Columna izquierda: formulario -->
     <section class="panel" style="margin-bottom:0;">
-      <h3>Contenido del código</h3>
+      <h3>Configuración del código</h3>
 
       <label for="tipo">Tipo de contenido</label>
       <select id="tipo">
@@ -303,11 +319,12 @@
         <option value="wifi">Red WiFi</option>
         <option value="wa">WhatsApp</option>
         <option value="mail">Correo</option>
+        <option value="vcard">Contacto (vCard)</option>
       </select>
 
       <div id="f-texto">
         <label for="txt">Texto o URL</label>
-        <textarea id="txt" placeholder="https://ejemplo.com"></textarea>
+        <textarea id="txt" placeholder="https://www.uandina.edu.pe"></textarea>
       </div>
       <div id="f-wifi" hidden>
         <label for="ssid">Nombre de la red</label>
@@ -336,11 +353,23 @@
         <label for="asu">Asunto</label>
         <input id="asu">
       </div>
+      <div id="f-vcard" hidden>
+        <div class="row">
+          <div><label for="vc-nombre">Nombres</label><input id="vc-nombre"></div>
+          <div><label for="vc-apellido">Apellidos</label><input id="vc-apellido"></div>
+        </div>
+        <label for="vc-tel">Teléfono</label><input id="vc-tel" type="tel">
+        <label for="vc-email">Correo electrónico</label><input id="vc-email" type="email">
+        <label for="vc-org">Organización / Cargo</label><input id="vc-org" placeholder="Universidad Andina del Cusco">
+      </div>
 
+      <div class="divider"></div>
+
+      <h3>Diseño y Estilo</h3>
       <div class="row">
         <div>
           <label for="size">Tamaño (px)</label>
-          <input id="size" type="number" min="200" max="1024" step="32" value="400">
+          <input id="size" type="number" min="200" max="2048" step="32" value="400">
         </div>
         <div>
           <label for="lvl">Corrección de error</label>
@@ -352,6 +381,24 @@
           </select>
         </div>
       </div>
+      
+      <div class="row">
+        <div>
+          <label for="estilo-puntos">Forma de los puntos</label>
+          <select id="estilo-puntos">
+            <option value="square">Cuadrados (Clásico)</option>
+            <option value="dots">Puntos redondos</option>
+          </select>
+        </div>
+        <div>
+          <label for="estilo-ojos">Forma de los ojos</label>
+          <select id="estilo-ojos">
+            <option value="square">Cuadrados</option>
+            <option value="rounded">Redondeados</option>
+          </select>
+        </div>
+      </div>
+
       <div class="row">
         <div>
           <label for="fg">Color del código</label>
@@ -362,7 +409,7 @@
           <input id="bg" type="color" value="#ffffff">
         </div>
       </div>
-      <p class="hint">Usa colores con buen contraste: el código oscuro sobre fondo claro se escanea mejor. La corrección máxima (H) es la recomendada para QR institucionales.</p>
+      <p class="hint">La corrección máxima (H) es obligatoria para que el logo central no afecte la lectura del código.</p>
     </section>
 
     <!-- Columna derecha: vista previa -->
@@ -371,11 +418,25 @@
       <div id="out" aria-live="polite"></div>
       <p id="err" role="alert"></p>
       <div class="btns">
-        <button id="dl">Descargar PNG</button>
-        <button id="cp" class="alt">Copiar imagen</button>
+        <button id="dl-png">Descargar PNG</button>
+        <button id="dl-svg" class="alt">Descargar SVG</button>
+        <button id="cp" class="alt">Copiar</button>
         <button id="clr" class="alt">Limpiar</button>
       </div>
-      <p class="hint" style="margin-top:18px;">Recientes (toca uno para recuperarlo):</p>
+      
+      <div class="divider"></div>
+      
+      <h3>Generación Masiva (CSV)</h3>
+      <p class="hint" style="margin-top:0; margin-bottom:12px;">Sube un archivo CSV con una lista de URLs o textos. Se generará un archivo .ZIP con todos los QR institucionales.</p>
+      <input type="file" id="csv-file" accept=".csv" style="padding:8px; background:#fff; border:1px solid var(--line); cursor:pointer;">
+      <div class="btns" style="margin-top:12px;">
+        <button id="dl-zip" disabled>Generar ZIP Masivo</button>
+      </div>
+      <p id="csv-status" class="hint"></p>
+
+      <div class="divider"></div>
+
+      <p class="hint">Recientes (toca uno para recuperarlo):</p>
       <div id="hist"></div>
     </section>
 
@@ -391,20 +452,19 @@
 /* ============================================================
    LOGO UAC VECTORIZADO (Águila azul oficial)
    ============================================================ */
-// Usamos un SVG nativo con la silueta exacta del águila de la UAC.
 const LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
   <path fill="#194D84" d="M 320.5,35.0 C 316.5,43.0 312.0,52.5 308.5,63.0 C 291.5,118.5 269.5,149.0 246.5,169.5 C 238.5,176.5 230.0,181.0 220.0,183.5 C 208.0,186.5 194.0,186.5 184.0,183.5 C 172.0,180.0 160.5,173.0 150.0,162.5 C 118.5,131.5 95.5,94.0 82.0,62.0 C 77.0,50.5 74.0,41.5 71.0,35.0 C 68.0,27.5 61.0,24.5 53.0,26.5 C 40.0,29.5 33.5,35.5 25.0,47.0 C 12.5,63.5 5.0,84.5 4.0,106.0 C 2.5,136.5 9.0,163.5 22.0,181.0 C 34.0,197.0 52.5,207.0 73.5,213.0 C 93.0,218.5 116.0,225.5 131.5,238.0 C 142.5,246.5 151.0,257.5 155.0,271.0 C 160.0,288.0 158.0,307.0 153.0,326.0 C 147.5,345.0 139.0,362.5 128.0,380.0 C 124.5,385.5 126.5,392.0 132.0,395.5 C 137.5,399.0 144.0,397.0 147.5,392.0 C 158.0,376.0 165.5,360.5 173.0,343.0 C 178.0,331.0 183.0,319.0 190.5,314.5 C 195.5,311.5 200.0,313.0 205.0,317.5 C 212.5,324.0 217.0,335.0 221.0,345.0 C 228.5,362.5 234.0,378.0 239.0,392.5 C 241.5,400.5 250.0,403.5 256.0,400.5 C 262.0,397.5 265.0,391.0 263.0,384.0 C 257.5,367.0 250.0,350.0 244.0,333.0 C 240.0,321.0 237.0,310.0 239.0,298.0 C 241.0,286.0 248.0,277.0 259.0,269.5 C 273.5,259.5 293.0,253.0 312.0,244.5 C 336.0,233.5 357.5,216.5 371.0,195.0 C 388.0,168.0 395.0,136.0 390.0,106.5 C 386.0,82.5 375.5,63.0 362.5,48.0 C 355.5,40.0 346.5,34.5 336.0,31.5 C 328.5,29.5 323.5,30.5 320.5,35.0 Z M 200.0,89.0 C 211.0,89.0 219.5,95.5 223.0,107.5 C 226.0,118.0 222.0,128.0 216.0,136.5 C 210.0,145.0 203.5,152.5 197.5,160.5 C 194.0,165.0 190.5,169.5 186.5,173.5 C 184.0,176.0 180.5,175.0 178.5,172.0 C 172.5,163.0 166.0,154.0 160.5,145.0 C 154.5,135.0 152.0,122.5 156.5,110.0 C 161.5,96.5 172.5,89.0 185.0,89.0 C 190.0,89.0 195.0,89.0 200.0,89.0 Z" />
 </svg>`;
 
-// Convertimos el SVG a Data URI para que la etiqueta <img> lo pueda procesar
 const LOGO_URI = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(LOGO_SVG);
 
 /* ============================================================
-   UTILIDADES
+   UTILIDADES Y ESTADO
    ============================================================ */
 const $ = id => document.getElementById(id);
-const ids = ['tipo','txt','ssid','pass','sec','tel','msg','to','asu','size','lvl','fg','bg'];
-let hist = [];
+const ids = ['tipo','txt','ssid','pass','sec','tel','msg','to','asu','size','lvl','fg','bg','estilo-puntos','estilo-ojos','vc-nombre','vc-apellido','vc-tel','vc-email','vc-org'];
+let hist = JSON.parse(localStorage.getItem('uac_qr_hist') || '[]');
+let csvData = [];
 
 function contenido(){
   const t = $('tipo').value;
@@ -422,15 +482,155 @@ function contenido(){
     if (!$('to').value) return '';
     return `mailto:${$('to').value}` + ($('asu').value ? `?subject=${encodeURIComponent($('asu').value)}` : '');
   }
+  if (t === 'vcard'){
+    const nom = $('vc-nombre').value.trim();
+    const ape = $('vc-apellido').value.trim();
+    const tel = $('vc-tel').value.trim();
+    const email = $('vc-email').value.trim();
+    const org = $('vc-org').value.trim();
+    if (!nom && !ape && !tel) return '';
+    return `BEGIN:VCARD\nVERSION:3.0\nN:${ape};${nom};;;\nFN:${nom} ${ape}\nORG:${org}\nTEL;TYPE=WORK,VOICE:${tel}\nEMAIL;TYPE=WORK:${email}\nEND:VCARD`;
+  }
   return $('txt').value.trim();
 }
 
 /* ============================================================
-   RENDER DEL QR CON LOGO INSTITUCIONAL
+   MOTOR DE RENDERIZADO AVANZADO (Formas y SVG)
+   ============================================================ */
+// Genera la matriz de datos del QR usando qrcodejs (inyectado en un div temporal)
+function getQRMatrix(text, level) {
+  const tmp = document.createElement('div');
+  new QRCode(tmp, {
+    text: text,
+    width: 200, height: 200,
+    correctLevel: QRCode.CorrectLevel[level]
+  });
+  // qrcodejs no expone la matriz directamente, así que usamos un canvas intermedio
+  const canvas = tmp.querySelector('canvas');
+  const ctx = canvas.getContext('2d');
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  
+  // Detectar el tamaño del módulo (asumiendo que el QR tiene un borde blanco de 4 módulos)
+  // Buscamos el primer píxel negro desde el centro para saber cuánto mide un módulo
+  let moduleSize = 1;
+  for (let i = canvas.width / 2; i < canvas.width; i++) {
+    if (imgData.data[i * 4] === 0) { // Si es negro
+      moduleSize = i - canvas.width / 2;
+      break;
+    }
+  }
+  
+  const numModules = Math.floor(canvas.width / moduleSize);
+  const border = 4; // qrcodejs usa un margen blanco por defecto
+  const matrixSize = numModules - (border * 2);
+  const matrix = [];
+  
+  for (let y = 0; y < matrixSize; y++) {
+    matrix[y] = [];
+    for (let x = 0; x < matrixSize; x++) {
+      const px = (x + border) * moduleSize + Math.floor(moduleSize / 2);
+      const py = (y + border) * moduleSize + Math.floor(moduleSize / 2);
+      const idx = (py * canvas.width + px) * 4;
+      // Si el píxel es oscuro, es un 1
+      matrix[y][x] = imgData.data[idx] < 128 ? 1 : 0;
+    }
+  }
+  return { matrix, size: matrixSize };
+}
+
+// Genera un SVG del QR con estilos avanzados
+function generateStyledSVG(text, level, size, fgColor, bgColor, stylePuntos, styleOjos, logoURI) {
+  const { matrix, size: numModules } = getQRMatrix(text, level);
+  const margin = 4;
+  const totalModules = numModules + margin * 2;
+  const scale = size / totalModules;
+  
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">`;
+  svg += `<rect width="100%" height="100%" fill="${bgColor}"/>`;
+  
+  // Función para dibujar un módulo
+  const drawModule = (x, y, isEye = false) => {
+    const px = (x + margin) * scale;
+    const py = (y + margin) * scale;
+    
+    if (isEye) {
+      // Los ojos se dibujan aparte para tener su propio estilo
+      return;
+    }
+    
+    if (stylePuntos === 'dots') {
+      const r = scale / 2;
+      return `<circle cx="${px + r}" cy="${py + r}" r="${r * 0.9}" fill="${fgColor}"/>`;
+    } else {
+      return `<rect x="${px}" y="${py}" width="${scale}" height="${scale}" fill="${fgColor}"/>`;
+    }
+  };
+
+  // Identificar los ojos (las 3 esquinas)
+  // Ojo superior izquierdo: 0-7, 0-7
+  // Ojo superior derecho: numModules-8 a numModules-1, 0-7
+  // Ojo inferior izquierdo: 0-7, numModules-8 a numModules-1
+  
+  const eyeSize = 7; // 7x7 módulos
+  const isEye = (x, y) => {
+    if (x < eyeSize && y < eyeSize) return true;
+    if (x >= numModules - eyeSize && y < eyeSize) return true;
+    if (x < eyeSize && y >= numModules - eyeSize) return true;
+    return false;
+  };
+
+  // Dibujar módulos
+  for (let y = 0; y < numModules; y++) {
+    for (let x = 0; x < numModules; x++) {
+      if (matrix[y][x] === 1) {
+        if (!isEye(x, y)) {
+          svg += drawModule(x, y);
+        }
+      }
+    }
+  }
+
+  // Dibujar los Ojos (Esquinas)
+  const drawEye = (x, y) => {
+    const px = (x + margin) * scale;
+    const py = (y + margin) * scale;
+    const outerSize = eyeSize * scale;
+    const innerSize = 3 * scale;
+    const innerOffset = 2 * scale;
+    const r = styleOjos === 'rounded' ? scale * 1.5 : 0;
+
+    // Marco exterior
+    svg += `<rect x="${px}" y="${py}" width="${outerSize}" height="${outerSize}" fill="none" stroke="${fgColor}" stroke-width="${scale}" rx="${r}"/>`;
+    // Centro
+    svg += `<rect x="${px + innerOffset}" y="${py + innerOffset}" width="${innerSize}" height="${innerSize}" fill="${fgColor}" rx="${r * 0.5}"/>`;
+  };
+
+  drawEye(0, 0);
+  drawEye(numModules - eyeSize, 0);
+  drawEye(0, numModules - eyeSize);
+
+  // Dibujar Logo Central
+  const logoSize = size * 0.22;
+  const logoPos = (size - logoSize) / 2;
+  const pad = logoSize * 0.12;
+  const boxSize = logoSize + pad * 2;
+  const boxPos = (size - boxSize) / 2;
+
+  // Fondo circular blanco
+  svg += `<circle cx="${size/2}" cy="${size/2}" r="${boxSize/2}" fill="#FFFFFF"/>`;
+  // Imagen del logo
+  svg += `<image href="${logoURI}" x="${logoPos}" y="${logoPos}" width="${logoSize}" height="${logoSize}" />`;
+
+  svg += `</svg>`;
+  return svg;
+}
+
+/* ============================================================
+   RENDERIZADO EN PANTALLA
    ============================================================ */
 function dibujar(){
   const tipo = $('tipo').value;
-  ['texto','wifi','wa','mail'].forEach(k => {
+  ['texto','wifi','wa','mail','vcard'].forEach(k => {
     $('f-' + k).hidden = (k !== tipo);
   });
 
@@ -444,167 +644,234 @@ function dibujar(){
     return;
   }
 
-  const size = Math.min(1024, Math.max(200, parseInt($('size').value) || 400));
+  const size = Math.min(2048, Math.max(200, parseInt($('size').value) || 400));
   const fg = $('fg').value;
   const bg = $('bg').value;
+  const nivel = $('lvl').value;
+  const estiloPuntos = $('estilo-puntos').value;
+  const estiloOjos = $('estilo-ojos').value;
 
-  // Contenedor temporal para el QR base
-  const tmp = document.createElement('div');
   try {
+    // Generamos el SVG avanzado
+    const svgString = generateStyledSVG(data, nivel, size, fg, bg, estiloPuntos, estiloOjos, LOGO_URI);
+    
+    // Lo inyectamos en el DOM
+    out.innerHTML = svgString;
+  } catch (e) {
+    console.error(e);
+    // Fallback al generador clásico si algo falla
+    const tmp = document.createElement('div');
     new QRCode(tmp, {
-      text: data,
-      width: size,
-      height: size,
-      colorDark: fg,
-      colorLight: bg,
-      correctLevel: QRCode.CorrectLevel[$('lvl').value]
+      text: data, width: size, height: size,
+      colorDark: fg, colorLight: bg,
+      correctLevel: QRCode.CorrectLevel[nivel]
     });
-  } catch (e){
-    $('err').textContent = 'El contenido es demasiado largo. Redúcelo o baja la corrección de error.';
-    return;
-  }
-
-  const baseCanvas = tmp.querySelector('canvas');
-  const baseImg = tmp.querySelector('img');
-
-  const finalCanvas = document.createElement('canvas');
-  finalCanvas.width = size;
-  finalCanvas.height = size;
-  const ctx = finalCanvas.getContext('2d');
-
-  function pintarLogo(){
-    // 1. Fondo
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, size, size);
-
-    // 2. QR
-    if (baseCanvas){
-      ctx.drawImage(baseCanvas, 0, 0, size, size);
-    } else if (baseImg){
-      ctx.drawImage(baseImg, 0, 0, size, size);
-    }
-
-    // 3. Logo institucional en el centro
-    const logoRatio = 0.22;                    // 22% del tamaño total
-    const logoSize = Math.round(size * logoRatio);
-    const logoPos = Math.round((size - logoSize) / 2);
-
-    // Fondo blanco circular detrás del logo
-    const pad = Math.round(logoSize * 0.12);
-    const boxSize = logoSize + pad * 2;
-    const boxPos = Math.round((size - boxSize) / 2);
-    const radius = boxSize / 2; 
-
-    ctx.save();
-    ctx.fillStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.arc(boxPos + radius, boxPos + radius, radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // 4. Dibujar el logo (Vectorizado)
-    const logoImg = new Image();
-    logoImg.onload = () => {
-      ctx.drawImage(logoImg, logoPos, logoPos, logoSize, logoSize);
-      
-      // Reemplazar el contenedor con el canvas final
-      out.innerHTML = '';
-      out.appendChild(finalCanvas);
-    };
-    logoImg.onerror = () => {
-      // Fallback: si el logo falla, mostramos al menos el QR base
-      out.innerHTML = '';
-      out.appendChild(finalCanvas);
-    };
-    logoImg.src = LOGO_URI;
-  }
-
-  // Esperar a que el QR base esté disponible
-  if (baseCanvas){
-    pintarLogo();
-  } else if (baseImg){
-    if (baseImg.complete) pintarLogo();
-    else baseImg.onload = pintarLogo;
-  } else {
-    setTimeout(() => {
-      const c = tmp.querySelector('canvas');
-      const i = tmp.querySelector('img');
-      if (c || i) dibujar();
-      else $('err').textContent = 'No se pudo generar el código. Intenta de nuevo.';
-    }, 50);
+    out.innerHTML = tmp.innerHTML;
   }
 }
 
 /* ============================================================
-   DESCARGA / COPIA / LIMPIEZA
+   DESCARGAS (PNG y SVG)
    ============================================================ */
-function canvas(){
-  return $('out').querySelector('canvas');
-}
-
-$('dl').onclick = () => {
-  const c = canvas();
-  if (!c) return;
+function descargarSVG() {
+  const svg = $('out').querySelector('svg');
+  if (!svg) return;
+  const svgString = new XMLSerializer().serializeToString(svg);
+  const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = c.toDataURL('image/png');
-  a.download = 'qr-uac-' + Date.now() + '.png';
+  a.href = url;
+  a.download = 'qr-uac-' + Date.now() + '.svg';
   a.click();
-  guardar(c.toDataURL('image/png'));
-};
+  URL.revokeObjectURL(url);
+  guardarHistorial('data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString))), contenido());
+}
 
-$('cp').onclick = async () => {
-  const c = canvas();
-  if (!c) return;
-  try{
-    const b = await new Promise(r => c.toBlob(r, 'image/png'));
-    await navigator.clipboard.write([new ClipboardItem({'image/png': b})]);
-    $('err').textContent = 'Imagen copiada al portapapeles.';
-  } catch (e){
-    $('err').textContent = 'Tu navegador no permite copiar la imagen. Usa Descargar PNG.';
-  }
-};
+function descargarPNG() {
+  const svg = $('out').querySelector('svg');
+  if (!svg) return;
+  const svgString = new XMLSerializer().serializeToString(svg);
+  const canvas = document.createElement('canvas');
+  const size = parseInt($('size').value) || 400;
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(svgBlob);
+    img.onload = function() {
+    ctx.drawImage(img, 0, 0, size, size);
+    URL.revokeObjectURL(url);
+    const pngData = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = pngData;
+    a.download = 'qr-uac-' + Date.now() + '.png';
+    a.click();
+    guardarHistorial(pngData, contenido());
+  };
+  img.src = url;
+}
 
-$('clr').onclick = () => {
-  ids.forEach(i => {
-    const el = $(i);
-    if (el.tagName !== 'SELECT' && el.type !== 'color' && el.type !== 'number') el.value = '';
+function copiar() {
+  const svg = $('out').querySelector('svg');
+  if (!svg) return;
+  const svgString = new XMLSerializer().serializeToString(svg);
+  navigator.clipboard.writeText(svgString).then(() => {
+    $('err').textContent = 'SVG copiado al portapapeles.';
+    setTimeout(() => { $('err').textContent = ''; }, 2000);
+  }).catch(() => {
+    $('err').textContent = 'No se pudo copiar.';
   });
-  dibujar();
-};
+}
 
 /* ============================================================
-   HISTORIAL
+   HISTORIAL (localStorage)
    ============================================================ */
-function guardar(url){
-  hist.unshift({url, txt: contenido(), tipo: $('tipo').value});
-  hist = hist.slice(0, 12);
-  const box = $('hist');
-  box.innerHTML = '';
-  hist.forEach(h => {
-    const b = document.createElement('button');
-    const safe = (h.txt || '').replace(/</g, '&lt;').slice(0, 24);
-    b.innerHTML = `<img alt="QR guardado" src="${h.url}"><span>${safe}</span>`;
-    b.onclick = () => {
+function guardarHistorial(dataURL, texto) {
+  const item = {
+    id: Date.now(),
+    img: dataURL,
+    texto: (texto || '').substring(0, 60),
+    fecha: new Date().toLocaleString()
+  };
+  hist.unshift(item);
+  if (hist.length > 12) hist = hist.slice(0, 12);
+  localStorage.setItem('uac_qr_hist', JSON.stringify(hist));
+  renderHistorial();
+}
+
+function renderHistorial() {
+  const cont = $('hist');
+  cont.innerHTML = '';
+  hist.forEach(item => {
+    const btn = document.createElement('button');
+    btn.title = item.texto + '\n' + item.fecha;
+    const img = document.createElement('img');
+    img.src = item.img;
+    img.alt = 'QR reciente';
+    const span = document.createElement('span');
+    span.textContent = item.texto || '(sin texto)';
+    btn.appendChild(img);
+    btn.appendChild(span);
+    btn.addEventListener('click', () => {
+      // Recuperar el texto en el campo correspondiente
       $('tipo').value = 'texto';
-      $('txt').value = h.txt;
+      $('txt').value = item.texto;
       dibujar();
-    };
-    box.appendChild(b);
+    });
+    cont.appendChild(btn);
   });
+}
+
+/* ============================================================
+   GENERACIÓN MASIVA (CSV → ZIP)
+   ============================================================ */
+function leerCSV(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    csvData = [];
+    lines.forEach(line => {
+      // Tomamos la primera columna como contenido (soporta comillas simples)
+      const match = line.match(/^"([^"]*)"|^([^,]*)/);
+      const val = (match[1] || match[2] || '').trim();
+      if (val) csvData.push(val);
+    });
+    $('csv-status').textContent = csvData.length + ' registros cargados.';
+    $('dl-zip').disabled = csvData.length === 0;
+  };
+  reader.readAsText(file);
+}
+
+async function generarZIP() {
+  if (!csvData.length) return;
+  $('csv-status').textContent = 'Generando ZIP...';
+  $('dl-zip').disabled = true;
+
+  const zip = new JSZip();
+  const nivel = $('lvl').value;
+  const size = Math.min(2048, Math.max(200, parseInt($('size').value) || 400));
+  const fg = $('fg').value;
+  const bg = $('bg').value;
+  const estiloPuntos = $('estilo-puntos').value;
+  const estiloOjos = $('estilo-ojos').value;
+
+  // Generar cada QR como SVG
+  for (let i = 0; i < csvData.length; i++) {
+    const texto = csvData[i];
+    try {
+      const svgString = generateStyledSVG(texto, nivel, size, fg, bg, estiloPuntos, estiloOjos, LOGO_URI);
+      zip.file(`qr_${String(i + 1).padStart(3, '0')}.svg`, svgString);
+    } catch (err) {
+      console.error('Error en registro', i + 1, err);
+    }
+  }
+
+  // Generar el ZIP
+  try {
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'qr-uac-masivo-' + Date.now() + '.zip';
+    a.click();
+    URL.revokeObjectURL(url);
+    $('csv-status').textContent = 'ZIP generado con ' + csvData.length + ' códigos.';
+  } catch (err) {
+    console.error(err);
+    $('csv-status').textContent = 'Error al generar el ZIP.';
+  }
+
+  $('dl-zip').disabled = false;
 }
 
 /* ============================================================
    EVENTOS E INICIALIZACIÓN
    ============================================================ */
-ids.forEach(i => $(i).addEventListener('input', dibujar));
-$('tipo').addEventListener('change', dibujar);
+document.addEventListener('DOMContentLoaded', function() {
+  // Cambio de tipo de contenido
+  $('tipo').addEventListener('change', dibujar);
 
-window.addEventListener('DOMContentLoaded', () => {
-  if (!$('txt').value && $('tipo').value === 'texto'){
-    $('txt').value = 'Universidad Andina del Cusco — Oficina de Grados y Títulos';
-  }
+  // Cambios en campos que afectan la vista previa
+  ['txt','ssid','pass','sec','tel','msg','to','asu','size','lvl','fg','bg','estilo-puntos','estilo-ojos','vc-nombre','vc-apellido','vc-tel','vc-email','vc-org'].forEach(id => {
+    const el = $(id);
+    if (el) {
+      el.addEventListener('input', dibujar);
+      el.addEventListener('change', dibujar);
+    }
+  });
+
+  // Botones de descarga y acciones
+  $('dl-png').addEventListener('click', descargarPNG);
+  $('dl-svg').addEventListener('click', descargarSVG);
+  $('cp').addEventListener('click', copiar);
+  $('clr').addEventListener('click', () => {
+    ids.forEach(id => {
+      const el = $(id);
+      if (el) {
+        if (el.tagName === 'SELECT') el.selectedIndex = 0;
+        else if (el.type === 'color') el.value = id === 'bg' ? '#ffffff' : '#0B2740';
+        else if (el.type === 'number') el.value = 400;
+        else el.value = '';
+      }
+    });
+    $('out').innerHTML = '';
+    $('err').textContent = '';
+    dibujar();
+  });
+
+  // CSV
+  $('csv-file').addEventListener('change', function(e) {
+    if (e.target.files.length) leerCSV(e.target.files[0]);
+  });
+  $('dl-zip').addEventListener('click', generarZIP);
+
+  // Render inicial
+  renderHistorial();
   dibujar();
 });
 </script>
 </body>
 </html>
+ 
